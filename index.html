@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hyperion‑Flux Control Room</title>
+    <title>Hyperion-Flux Mission-Control</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,293 +14,263 @@
   </head>
   <body>
     <header class="hero">
-      <div class="hero__content">
-        <p class="eyebrow">Hyperion‑Flux</p>
-        <h1>Modular Cyber Operations Flight Deck</h1>
-        <p class="lede" data-summary>
-          Loading mission data…
+      <div>
+        <p class="eyebrow">Hyperion-Flux</p>
+        <h1>Mission-Control</h1>
+        <p class="lede">
+          Authenticate with an ADMIN, OPS, or VIEWER account to control the merged Hyperion-Flux repos through a single
+          mission console. All data flows from the secured API served out of this repository.
         </p>
-        <div class="hero__stats">
-          <div class="stat">
-            <span data-pillars-count>0</span>
-            <p>Architecture Pillars</p>
-          </div>
-          <div class="stat">
-            <span data-modules-count>0</span>
-            <p>Capability Modules</p>
-          </div>
-          <div class="stat">
-            <span data-roadmap-count>0</span>
-            <p>Roadmap Phases</p>
-          </div>
-          <div class="stat">
-            <span data-stage-count>0</span>
-            <p>Lifecycle Stages</p>
-          </div>
-        </div>
+        <p class="hint">Seeded accounts: admin@hyperion.local / adminpass, ops@hyperion.local / opspass, viewer@hyperion.local / viewerpass.</p>
       </div>
-      <div class="hero__globe">
-        <div class="globe"></div>
-        <p>
-          Real‑time readiness derived from the Hyperion‑Flux prompt embedded in this
-          repository.
-        </p>
+      <div class="hero__panel">
+        <p class="eyebrow">Operator</p>
+        <div class="current-user" id="currentUser">Not authenticated</div>
+        <button id="logoutButton" class="ghost" disabled>Log out</button>
       </div>
     </header>
 
+    <nav class="primary-nav">
+      <button class="nav-link active" data-target="dashboardPanel">Dashboard</button>
+      <button class="nav-link" data-target="modulesPanel">Modules</button>
+      <button class="nav-link" data-target="roadmapPanel">Roadmap</button>
+      <button class="nav-link" data-target="architecturePanel">Architecture</button>
+      <button class="nav-link" data-target="securityPanel">Security</button>
+      <button class="nav-link" data-target="simulationPanel">Simulation</button>
+    </nav>
+
     <main>
-      <section class="panel" id="repos">
+      <section class="panel" id="authPanel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Repository map</p>
-            <h2>Merged source streams</h2>
-            <p>
-              We cloned <span class="code-pill">v1.2-hyperion-flux</span>,
-              <span class="code-pill">v0-hyperion-flux</span>, and
-              <span class="code-pill">quantum-cyber-forge-86c4ede5</span> into this environment.
-              Each card lists the concrete files the dashboard references.
-            </p>
+            <p class="eyebrow">Access control</p>
+            <h2>Authenticate</h2>
+            <p>Generate viewer accounts or log in with seeded roles. Tokens persist locally and refresh automatically.</p>
           </div>
         </div>
-        <div class="grid repo-grid" id="repoGrid"></div>
-      </section>
-
-      <section class="panel" id="fusion">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Integration threads</p>
-            <h2>How the repos fuse</h2>
-            <p>
-              Every workflow traces back to a trio of files—vanilla prompt data, the v0 Next + Nest stack,
-              and the Lovable forge kit. Use these briefs to audit the merge.
-            </p>
-          </div>
+        <div class="auth-grid">
+          <form id="loginForm" class="card">
+            <h3>Log in</h3>
+            <label>Email<input type="email" name="email" required /></label>
+            <label>Password<input type="password" name="password" required /></label>
+            <button type="submit">Request token</button>
+          </form>
+          <form id="registerForm" class="card">
+            <h3>Register Viewer</h3>
+            <p>Viewer accounts can explore telemetry but not mutate mission data.</p>
+            <label>Email<input type="email" name="email" required /></label>
+            <label>Password<input type="password" name="password" required minlength="8" /></label>
+            <button type="submit">Provision viewer</button>
+          </form>
         </div>
-        <div class="grid fusion-grid" id="fusionGrid"></div>
+        <p class="panel__status" id="authStatus">Not authenticated.</p>
       </section>
 
-      <section class="panel" id="stack">
+      <section class="panel" id="dashboardPanel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Stack intelligence</p>
-            <h2>Coaxys v0 scaffolding</h2>
-            <p>
-              Every interface, module service, and SQL seed from
-              <span class="code-pill">github.com/Coaxys-A/v0-hyperion-flux</span>
-              is cataloged below so this dashboard mirrors the production Next.js + NestJS
-              build.
-            </p>
+            <p class="eyebrow">Mission snapshot</p>
+            <h2>Operational overview</h2>
+            <p>Counts pull directly from the API once you authenticate.</p>
           </div>
+          <button id="refreshDashboard" class="ghost">Refresh</button>
         </div>
-        <div class="grid stack-grid" id="stackGrid"></div>
+        <div class="grid stats-grid">
+          <article class="stat-card">
+            <p>Modules</p>
+            <strong data-stat-modules>--</strong>
+          </article>
+          <article class="stat-card">
+            <p>Stages</p>
+            <strong data-stat-stages>--</strong>
+          </article>
+          <article class="stat-card">
+            <p>Tracked Risks</p>
+            <strong data-stat-risks>--</strong>
+          </article>
+          <article class="stat-card">
+            <p>Architecture Nodes</p>
+            <strong data-stat-nodes>--</strong>
+          </article>
+        </div>
       </section>
 
-      <section class="panel" id="pillars">
+      <section class="panel" id="modulesPanel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Architecture</p>
-            <h2>Core pillars</h2>
-            <p>
-              The backbone of Hyperion‑Flux spans confidential computing, zero‑trust
-              meshes, and adaptive telemetry. Explore each pillar to understand how the
-              system keeps the swarm resilient.
-            </p>
-          </div>
-        </div>
-        <div class="grid pillars" id="pillarGrid"></div>
-      </section>
-
-      <section class="panel" id="modules">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Capabilities</p>
-            <h2>Modular intelligence packages</h2>
-            <p>
-              Modules capture the actionable parts of Hyperion‑Flux. Search and filter the
-              catalog to find the interfaces or threat mitigations you need.
-            </p>
+            <p class="eyebrow">Capability registry</p>
+            <h2>Modules</h2>
+            <p>CRUD operations are backed by the `/api/modules` endpoints with RBAC enforcement.</p>
           </div>
           <div class="controls">
-            <input
-              id="moduleSearch"
-              type="search"
-              placeholder="Search modules, KPIs, or mitigations"
-              aria-label="Search modules"
-            />
-            <button id="insightButton">Generate insight</button>
+            <input type="search" id="moduleSearch" placeholder="Search modules" />
+            <select id="moduleDomainFilter">
+              <option value="">All domains</option>
+            </select>
+            <select id="moduleStatusFilter">
+              <option value="">All status</option>
+              <option value="green">Green</option>
+              <option value="amber">Amber</option>
+              <option value="red">Red</option>
+            </select>
+            <button id="reloadModules" class="ghost">Reload</button>
           </div>
         </div>
-        <div class="filter-chips" id="domainFilters" aria-label="Filter modules by domain"></div>
-        <p class="insight" id="insightOutput">Tap “Generate insight” to surface a pattern.</p>
-        <div class="grid modules" id="moduleGrid"></div>
-        <p class="module-empty" id="moduleEmpty" hidden>No modules match the current search and domain filters.</p>
-        <p class="module-hint">Select any module to open the forge brief sourced from the Quantum Cyber Forge kit.</p>
-      </section>
-
-      <section class="panel" id="patterns">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Blueprints</p>
-            <h2>Forge patterns</h2>
-            <p>
-              Cross-reference Hyperion-Flux modules with the quantum-cyber-forge playbooks. These blueprints illustrate how the
-              repos merge to accelerate releases.
-            </p>
+        <div class="grid modules-grid" id="modulesList"></div>
+        <form id="moduleForm" class="card" data-requires-role="ADMIN,OPS">
+          <h3>Create / Update Module</h3>
+          <p>OPS and ADMIN roles may register modules. Provide interfaces one per line using `name|description`.</p>
+          <input type="hidden" name="id" />
+          <label>Name<input type="text" name="name" required /></label>
+          <label>Domain<input type="text" name="domain" required /></label>
+          <label>Status
+            <select name="status" required>
+              <option value="green">Green</option>
+              <option value="amber">Amber</option>
+              <option value="red">Red</option>
+            </select>
+          </label>
+          <label>Purpose<textarea name="purpose" required></textarea></label>
+          <label>Security notes<textarea name="security_notes"></textarea></label>
+          <label>Tags (comma separated)<input type="text" name="tags" /></label>
+          <label>KPIs (comma separated)<input type="text" name="kpis" /></label>
+          <label>Interfaces<textarea name="interfaces" placeholder="Guardian Sweep|Ingest mission beacons"></textarea></label>
+          <div class="form-actions">
+            <button type="submit">Save module</button>
+            <button type="button" id="clearModuleForm" class="ghost">Clear</button>
           </div>
-        </div>
-        <div class="grid patterns" id="patternGrid"></div>
+        </form>
       </section>
 
-      <section class="panel" id="assets">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Reference kit</p>
-            <h2>Forge assets</h2>
-            <p>
-              Pull artifacts straight from the quantum-cyber-forge-86c4ede5 repo—pipelines, harnesses, dashboards, and registries that power Hyperion deployments.
-            </p>
-          </div>
-        </div>
-        <div class="grid assets" id="assetGrid"></div>
-      </section>
-
-      <section class="panel" id="services">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Mission services</p>
-            <h2>Full-stack control</h2>
-            <p>
-              Backend controllers, DTOs, and SQL plans from the v0 repository map one-to-one with Hyperion’s module registry,
-              roadmap, security, simulation, and billing consoles.
-            </p>
-          </div>
-        </div>
-        <div class="grid service-grid" id="serviceGrid"></div>
-      </section>
-
-      <section class="panel" id="scripts">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Mission playbooks</p>
-            <h2>Forge scripts</h2>
-            <p>
-              Every script is mapped to a forge file and pattern so operators can follow Guardian Sweep, Cipher Cascade, and Radiant Archive drills end-to-end.
-            </p>
-          </div>
-        </div>
-        <div class="script-list" id="scriptList"></div>
-      </section>
-
-      <section class="panel" id="lab">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Lab telemetry</p>
-            <h2>Forge health</h2>
-            <p>
-              Synthesize metrics taken directly from forge pipelines, scenarios, and runbooks, plus see how modules align to each forge blueprint.
-            </p>
-          </div>
-        </div>
-        <div class="lab-metrics" id="labMetrics"></div>
-        <div>
-          <h3 class="matrix-title">Module ↔ Pattern alignment</h3>
-          <div class="matrix-table" id="matrixTable"></div>
-        </div>
-      </section>
-
-      <section class="panel" id="roadmap">
+      <section class="panel" id="roadmapPanel">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Roadmap</p>
-            <h2>Phase tracker</h2>
-            <p>
-              Each phase repeats a disciplined cycle—design, prototype, integrate, audit,
-              and release. The timeline highlights the current level of completion and
-              milestones.
-            </p>
+            <h2>Stages & Tasks</h2>
+            <p>Task updates immediately persist to the backend.</p>
           </div>
         </div>
-        <div class="roadmap" id="roadmapTimeline"></div>
+        <div class="roadmap" id="roadmapStages"></div>
+        <form id="taskForm" class="card" data-requires-role="ADMIN,OPS">
+          <h3>Add task</h3>
+          <label>Stage<select name="stage_id" id="taskStageSelect" required></select></label>
+          <label>Title<input type="text" name="title" required /></label>
+          <label>Status
+            <select name="status">
+              <option value="todo">To do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </label>
+          <label>Owner<input type="text" name="owner" /></label>
+          <button type="submit">Create task</button>
+        </form>
       </section>
 
-      <section class="panel" id="risks">
+      <section class="panel" id="architecturePanel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Operational guardrails</p>
-            <h2>Risk register</h2>
-            <p>
-              Hyperion‑Flux anticipates high‑impact risks and ties each to a mitigation play.
-              Track the active risks below.
-            </p>
+            <p class="eyebrow">Architecture</p>
+            <h2>Visualizer</h2>
+            <p>Nodes show real health pulled from the API. OPS & ADMIN can add components.</p>
           </div>
         </div>
-        <ul class="risk-list" id="riskList"></ul>
+        <div class="architecture" id="nodeList"></div>
+        <form id="nodeForm" class="card" data-requires-role="ADMIN,OPS">
+          <h3>Add node</h3>
+          <label>Name<input type="text" name="name" required /></label>
+          <label>Type<input type="text" name="type" required /></label>
+          <label>Status
+            <select name="status">
+              <option value="healthy">Healthy</option>
+              <option value="degraded">Degraded</option>
+              <option value="offline">Offline</option>
+            </select>
+          </label>
+          <label>Owner<input type="text" name="owner" /></label>
+          <button type="submit">Persist node</button>
+        </form>
       </section>
 
-      <section class="panel" id="stages">
+      <section class="panel" id="securityPanel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Lifecycle</p>
-            <h2>Stage navigator</h2>
-            <p>
-              Drag the slider to move through the 0‑to‑100 journey encoded in the prompt. We
-              surface the current stage narrative and completion percentage.
-            </p>
+            <p class="eyebrow">Security center</p>
+            <h2>Risk & Compliance</h2>
+            <p>Aggregations power the dashboard cards and update live as you log risks.</p>
           </div>
+          <button id="refreshSecurity" class="ghost">Refresh</button>
         </div>
-        <div class="stage-controller">
-          <div class="stage-details">
-            <div>
-              <p class="eyebrow">Active Stage</p>
-              <h3 data-stage-number>Stage 0</h3>
-            </div>
-            <p data-stage-detail>Loading…</p>
-          </div>
-          <div class="stage-progress">
-            <span class="stage-progress__value" data-stage-progress>0%</span>
-            <div class="progress-bar">
-              <div class="fill" data-stage-progress-fill></div>
-            </div>
-          </div>
-          <input type="range" id="stageRange" min="0" value="0" step="1" />
+        <div class="security-grid">
+          <article class="card">
+            <h3>Summary</h3>
+            <p>Total risks: <strong data-risk-total>--</strong></p>
+            <p>High severity: <strong data-risk-high>--</strong></p>
+            <p>Open risks: <strong data-risk-open>--</strong></p>
+            <p>Top risk: <span data-risk-top>--</span></p>
+          </article>
+          <article class="card">
+            <h3>Controls</h3>
+            <ul id="controlList"></ul>
+          </article>
         </div>
+        <div class="risk-wrapper">
+          <div>
+            <h3>Risks</h3>
+            <ul id="riskList"></ul>
+          </div>
+          <form id="riskForm" class="card" data-requires-role="ADMIN,OPS">
+            <h3>Log risk</h3>
+            <label>Title<input type="text" name="title" required /></label>
+            <label>Severity
+              <select name="severity">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <label>Owner<input type="text" name="owner" /></label>
+            <label>Status<input type="text" name="status" value="open" /></label>
+            <label>Mitigation<textarea name="mitigation"></textarea></label>
+            <button type="submit">Submit risk</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel" id="simulationPanel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Simulation engine</p>
+            <h2>Mission drills</h2>
+            <p>OPS and ADMIN may trigger the server-side simulation which also pushes WebSocket events.</p>
+          </div>
+          <button id="startSimulation" class="ghost" data-requires-role="ADMIN,OPS">Start simulation</button>
+        </div>
+        <div class="simulation-log" id="simulationLog">Authenticate to stream events.</div>
       </section>
     </main>
 
-    <section class="module-drawer" id="moduleDrawer" aria-hidden="true">
-      <div class="module-drawer__content" role="dialog" aria-labelledby="moduleDrawerTitle">
-        <button class="module-drawer__close" type="button" data-module-close aria-label="Close module details">×</button>
-        <p class="eyebrow" data-module-domain></p>
-        <h3 id="moduleDrawerTitle" data-module-title>Module</h3>
-        <p data-module-summary></p>
-        <div class="drawer-grid">
-          <article>
-            <h4>Interfaces</h4>
-            <ul data-module-interfaces></ul>
-          </article>
-          <article>
-            <h4>KPIs</h4>
-            <ul data-module-kpis></ul>
-          </article>
-          <article>
-            <h4>Mitigations</h4>
-            <ul data-module-mitigations></ul>
-          </article>
+    <template id="moduleTemplate">
+      <article class="module-card">
+        <header>
+          <div>
+            <p class="eyebrow">Module</p>
+            <h3 data-module-name></h3>
+          </div>
+          <span data-module-domain></span>
+        </header>
+        <p class="module-status" data-module-status></p>
+        <p data-module-purpose></p>
+        <p class="module-security" data-module-security></p>
+        <div class="chip-row" data-module-tags></div>
+        <ul class="kpi-list" data-module-kpis></ul>
+        <ul class="interface-list" data-module-interfaces></ul>
+        <div class="card-actions">
+          <button type="button" data-edit-module>Edit</button>
         </div>
-        <article>
-          <h4>Source files</h4>
-          <ul class="code-list" data-module-sources></ul>
-        </article>
-        <p class="drawer-footnote" data-module-tags></p>
-      </div>
-    </section>
+      </article>
+    </template>
 
-    <footer>
-      <p>
-        Built directly from the Hyperion‑Flux prompt stored in <code>HyperionFlux_prompt_15MB.txt</code>.
-      </p>
-    </footer>
-
-    <script type="module" src="app.js"></script>
+    <script src="app.js" type="module"></script>
   </body>
 </html>

@@ -1,553 +1,625 @@
 const state = {
-  data: null,
-  modules: [],
-  allModules: [],
-  activeStageIndex: 0,
-  activeModule: null,
+  auth: {
+    user: null,
+    accessToken: null,
+    refreshToken: null,
+  },
   filters: {
     query: '',
-    domain: 'all',
+    domain: '',
+    status: '',
   },
+  modules: [],
+  stages: [],
+  architecture: { nodes: [], edges: [] },
+  security: { risks: [], controls: [], summary: null },
+  ws: null,
 };
 
 const selectors = {
-  summary: document.querySelector('[data-summary]'),
-  pillarsCount: document.querySelector('[data-pillars-count]'),
-  modulesCount: document.querySelector('[data-modules-count]'),
-  roadmapCount: document.querySelector('[data-roadmap-count]'),
-  stageCount: document.querySelector('[data-stage-count]'),
-  pillarGrid: document.getElementById('pillarGrid'),
-  moduleGrid: document.getElementById('moduleGrid'),
-  moduleEmpty: document.getElementById('moduleEmpty'),
-  roadmapTimeline: document.getElementById('roadmapTimeline'),
+  loginForm: document.getElementById('loginForm'),
+  registerForm: document.getElementById('registerForm'),
+  authStatus: document.getElementById('authStatus'),
+  logoutButton: document.getElementById('logoutButton'),
+  currentUser: document.getElementById('currentUser'),
+  statModules: document.querySelector('[data-stat-modules]'),
+  statStages: document.querySelector('[data-stat-stages]'),
+  statRisks: document.querySelector('[data-stat-risks]'),
+  statNodes: document.querySelector('[data-stat-nodes]'),
+  modulesList: document.getElementById('modulesList'),
+  moduleTemplate: document.getElementById('moduleTemplate'),
+  moduleForm: document.getElementById('moduleForm'),
+  clearModuleForm: document.getElementById('clearModuleForm'),
+  moduleSearch: document.getElementById('moduleSearch'),
+  moduleDomainFilter: document.getElementById('moduleDomainFilter'),
+  moduleStatusFilter: document.getElementById('moduleStatusFilter'),
+  reloadModules: document.getElementById('reloadModules'),
+  dashboardRefresh: document.getElementById('refreshDashboard'),
+  taskForm: document.getElementById('taskForm'),
+  taskStageSelect: document.getElementById('taskStageSelect'),
+  roadmapStages: document.getElementById('roadmapStages'),
+  nodeList: document.getElementById('nodeList'),
+  nodeForm: document.getElementById('nodeForm'),
   riskList: document.getElementById('riskList'),
-  insightOutput: document.getElementById('insightOutput'),
-  stageNumber: document.querySelector('[data-stage-number]'),
-  stageDetail: document.querySelector('[data-stage-detail]'),
-  stageProgressValue: document.querySelector('[data-stage-progress]'),
-  stageProgressFill: document.querySelector('[data-stage-progress-fill]'),
-  stageRange: document.getElementById('stageRange'),
-  patternGrid: document.getElementById('patternGrid'),
-  domainFilters: document.getElementById('domainFilters'),
-  assetGrid: document.getElementById('assetGrid'),
-  stackGrid: document.getElementById('stackGrid'),
-  serviceGrid: document.getElementById('serviceGrid'),
-  scriptList: document.getElementById('scriptList'),
-  labMetrics: document.getElementById('labMetrics'),
-  matrixTable: document.getElementById('matrixTable'),
-  repoGrid: document.getElementById('repoGrid'),
-  fusionGrid: document.getElementById('fusionGrid'),
-  moduleDrawer: document.getElementById('moduleDrawer'),
-  moduleDrawerTitle: document.querySelector('[data-module-title]'),
-  moduleDrawerDomain: document.querySelector('[data-module-domain]'),
-  moduleDrawerSummary: document.querySelector('[data-module-summary]'),
-  moduleDrawerInterfaces: document.querySelector('[data-module-interfaces]'),
-  moduleDrawerKpis: document.querySelector('[data-module-kpis]'),
-  moduleDrawerMitigations: document.querySelector('[data-module-mitigations]'),
-  moduleDrawerTags: document.querySelector('[data-module-tags]'),
-  moduleDrawerSources: document.querySelector('[data-module-sources]'),
-  moduleDrawerClose: document.querySelector('[data-module-close]'),
+  controlList: document.getElementById('controlList'),
+  riskForm: document.getElementById('riskForm'),
+  riskTotal: document.querySelector('[data-risk-total]'),
+  riskHigh: document.querySelector('[data-risk-high]'),
+  riskOpen: document.querySelector('[data-risk-open]'),
+  riskTop: document.querySelector('[data-risk-top]'),
+  refreshSecurity: document.getElementById('refreshSecurity'),
+  simulationLog: document.getElementById('simulationLog'),
+  startSimulation: document.getElementById('startSimulation'),
+  authForms: document.querySelectorAll('form'),
 };
 
-async function bootstrap() {
+function saveAuth() {
+  localStorage.setItem('hyperion-auth', JSON.stringify(state.auth));
+}
+
+function loadAuth() {
+  const raw = localStorage.getItem('hyperion-auth');
+  if (!raw) return;
   try {
-    const response = await fetch('data/hyperionFluxData.json');
-    if (!response.ok) throw new Error('Unable to load Hyperion‑Flux data');
-    const data = await response.json();
-    state.data = data;
-    state.allModules = data.modules;
-    state.modules = data.modules;
-    hydrateHero();
-    renderPillars();
-    renderDomainFilters();
-    applyModuleFilters();
-    renderPatterns();
-    renderAssets();
-    renderStackLayers();
-    renderMissionServices();
-    renderMissionScripts();
-    renderRoadmap();
-    renderRisks();
-    renderStages();
-    renderLabMetrics();
-    renderMatrix();
-    renderRepoStreams();
-    renderFusionThreads();
-    bindSearch();
-    bindInsights();
-    bindModuleDrawer();
+    const parsed = JSON.parse(raw);
+    state.auth = parsed;
   } catch (error) {
-    selectors.summary.textContent = error.message;
+    console.warn('Unable to parse auth cache');
+  }
+}
+
+function clearAuth() {
+  state.auth = { user: null, accessToken: null, refreshToken: null };
+  localStorage.removeItem('hyperion-auth');
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  if (state.auth.user) {
+    selectors.currentUser.textContent = `${state.auth.user.email} (${state.auth.user.role})`;
+    selectors.logoutButton.disabled = false;
+    selectors.authStatus.textContent = `Authenticated as ${state.auth.user.role}`;
+    document.body.classList.add('is-authenticated');
+  } else {
+    selectors.currentUser.textContent = 'Not authenticated';
+    selectors.logoutButton.disabled = true;
+    selectors.authStatus.textContent = 'Not authenticated.';
+    document.body.classList.remove('is-authenticated');
+  }
+  lockRoleBasedForms();
+}
+
+function lockRoleBasedForms() {
+  document.querySelectorAll('[data-requires-role]').forEach((element) => {
+    const allowed = element.dataset.requiresRole.split(',').map((role) => role.trim());
+    const enabled = state.auth.user && allowed.includes(state.auth.user.role);
+    element.dataset.disabled = enabled ? 'false' : 'true';
+    element.querySelectorAll('input,select,textarea,button').forEach((node) => {
+      node.disabled = !enabled;
+    });
+  });
+  if (selectors.startSimulation) {
+    const allowed = selectors.startSimulation.dataset.requiresRole?.split(',').map((role) => role.trim()) || [];
+    const enabled = state.auth.user && allowed.includes(state.auth.user.role);
+    selectors.startSimulation.disabled = !enabled;
+  }
+}
+
+async function apiFetch(path, options = {}, retry = true) {
+  const headers = options.headers ? { ...options.headers } : {};
+  if (!(options.body instanceof FormData) && options.body && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (state.auth.accessToken) {
+    headers.Authorization = `Bearer ${state.auth.accessToken}`;
+  }
+  const response = await fetch(path, { ...options, headers });
+  if (response.status === 401 && retry && state.auth.refreshToken) {
+    const refreshResponse = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: state.auth.refreshToken }),
+    });
+    if (refreshResponse.ok) {
+      const data = await refreshResponse.json();
+      state.auth.accessToken = data.accessToken;
+      saveAuth();
+      return apiFetch(path, options, false);
+    }
+    clearAuth();
+    throw new Error('Session expired. Log in again.');
+  }
+  if (!response.ok) {
+    let message = 'Request failed';
+    try {
+      const payload = await response.json();
+      message = payload.message || message;
+    } catch (error) {
+      // ignore
+    }
+    throw new Error(message);
+  }
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+function wireAuth() {
+  selectors.loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    try {
+      const payload = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
+      }, false);
+      state.auth = {
+        user: payload.user,
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+      };
+      saveAuth();
+      updateAuthUI();
+      connectWebSocket();
+      await loadAllData();
+    } catch (error) {
+      selectors.authStatus.textContent = error.message;
+    }
+  });
+
+  selectors.registerForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    try {
+      await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
+      }, false);
+      selectors.authStatus.textContent = 'Viewer registered. Proceed to log in.';
+      event.currentTarget.reset();
+    } catch (error) {
+      selectors.authStatus.textContent = error.message;
+    }
+  });
+
+  selectors.logoutButton?.addEventListener('click', async () => {
+    if (!state.auth.refreshToken) return clearAuth();
+    await apiFetch('/api/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken: state.auth.refreshToken }),
+    }, false).catch(() => {});
+    if (state.ws) {
+      state.ws.close();
+      state.ws = null;
+    }
+    clearAuth();
+    selectors.simulationLog.textContent = 'Logged out. Authenticate to stream events.';
+  });
+}
+
+async function loadDashboard() {
+  if (!state.auth.user) return;
+  try {
+    const stats = await apiFetch('/api/dashboard');
+    selectors.statModules.textContent = stats.modules;
+    selectors.statStages.textContent = stats.stages;
+    selectors.statRisks.textContent = stats.risks;
+    selectors.statNodes.textContent = stats.nodes;
+  } catch (error) {
+    selectors.statModules.textContent = '—';
     console.error(error);
   }
 }
 
-function hydrateHero() {
-  const { summary, architecture_pillars, modules, roadmap_phases, stages } = state.data;
-  selectors.summary.textContent = summary;
-  selectors.pillarsCount.textContent = architecture_pillars.length;
-  selectors.modulesCount.textContent = modules.length;
-  selectors.roadmapCount.textContent = roadmap_phases.length;
-  selectors.stageCount.textContent = stages.length;
-}
-
-function renderPillars() {
-  const fragment = document.createDocumentFragment();
-  state.data.architecture_pillars.forEach((pillar) => {
-    const card = document.createElement('article');
-    card.className = 'pillar-card';
-    card.innerHTML = `
-      <span class="badge">Pillar</span>
-      <h3>${pillar}</h3>
-      <p>Reinforces distributed autonomy, secure execution, and verifiable telemetry across the swarm.</p>
-    `;
-    fragment.appendChild(card);
-  });
-  selectors.pillarGrid.replaceChildren(fragment);
+async function loadModules() {
+  if (!state.auth.user) return;
+  const params = new URLSearchParams();
+  if (state.filters.query) params.append('query', state.filters.query);
+  if (state.filters.domain) params.append('domain', state.filters.domain);
+  if (state.filters.status) params.append('status', state.filters.status);
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  try {
+    state.modules = await apiFetch(`/api/modules${queryString}`);
+    renderModules();
+  } catch (error) {
+    selectors.modulesList.textContent = error.message;
+  }
 }
 
 function renderModules() {
+  selectors.modulesList.replaceChildren();
   const fragment = document.createDocumentFragment();
-  state.modules.forEach((module, index) => {
-    const card = document.createElement('article');
-    card.className = 'module-card';
-    card.innerHTML = `
-      <div class="module-card__header">
-        <span class="badge">${module.name}</span>
-        <small>${module.domain}</small>
-      </div>
-      <h3>${module.purpose}</h3>
-      <p>${module.security}</p>
-      <small>Module ${index + 1} of ${state.data.modules.length}</small>
-    `;
-
-    const chips = document.createElement('ul');
-    chips.className = 'chip-list';
-    module.tags.forEach((tag) => {
-      const chip = document.createElement('li');
-      chip.textContent = tag;
-      chips.appendChild(chip);
+  const domains = new Set();
+  state.modules.forEach((module) => domains.add(module.domain));
+  state.modules.forEach((module) => {
+    const node = selectors.moduleTemplate.content.cloneNode(true);
+    node.querySelector('[data-module-name]').textContent = module.name;
+    node.querySelector('[data-module-domain]').textContent = module.domain;
+    node.querySelector('[data-module-status]').textContent = `Status: ${module.status}`;
+    node.querySelector('[data-module-purpose]').textContent = module.purpose;
+    node.querySelector('[data-module-security]').textContent = module.security_notes || '—';
+    const tagContainer = node.querySelector('[data-module-tags]');
+    tagContainer.replaceChildren();
+    (module.tags || []).forEach((tag) => {
+      const span = document.createElement('span');
+      span.textContent = tag;
+      tagContainer.appendChild(span);
     });
-    card.appendChild(chips);
-
-    if (module.sources?.length) {
-      const sourceList = document.createElement('ul');
-      sourceList.className = 'code-list';
-      module.sources.forEach((source) => {
-        const item = document.createElement('li');
-        item.textContent = source;
-        sourceList.appendChild(item);
-      });
-      card.appendChild(sourceList);
-    }
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = 'Open forge brief';
-    button.addEventListener('click', () => openModuleDrawer(module));
-    card.appendChild(button);
-    fragment.appendChild(card);
+    const kpiList = node.querySelector('[data-module-kpis]');
+    kpiList.replaceChildren();
+    (module.kpis || []).forEach((kpi) => {
+      const li = document.createElement('li');
+      li.textContent = kpi;
+      kpiList.appendChild(li);
+    });
+    const interfaceList = node.querySelector('[data-module-interfaces]');
+    interfaceList.replaceChildren();
+    (module.interfaces || []).forEach((iface) => {
+      const li = document.createElement('li');
+      li.textContent = `${iface.name}: ${iface.description}`;
+      interfaceList.appendChild(li);
+    });
+    node.querySelector('[data-edit-module]').addEventListener('click', () => populateModuleForm(module));
+    fragment.appendChild(node);
   });
-  selectors.moduleGrid.replaceChildren(fragment);
-  if (selectors.moduleEmpty) {
-    selectors.moduleEmpty.hidden = state.modules.length > 0;
+  if (!fragment.children.length) {
+    const empty = document.createElement('p');
+    empty.textContent = 'No modules match your filter. Adjust the search criteria.';
+    selectors.modulesList.appendChild(empty);
+  } else {
+    selectors.modulesList.appendChild(fragment);
+  }
+  rebuildDomainFilter(domains);
+}
+
+function rebuildDomainFilter(domains) {
+  const current = selectors.moduleDomainFilter.value;
+  selectors.moduleDomainFilter.replaceChildren(new Option('All domains', ''));
+  Array.from(domains)
+    .sort()
+    .forEach((domain) => {
+      const option = new Option(domain, domain);
+      selectors.moduleDomainFilter.appendChild(option);
+    });
+  if ([...selectors.moduleDomainFilter.options].some((opt) => opt.value === current)) {
+    selectors.moduleDomainFilter.value = current;
   }
 }
 
-function renderDomainFilters() {
-  if (!selectors.domainFilters) return;
-  const filters = ['all', ...new Set(state.data.modules.map((module) => module.domain))];
-  selectors.domainFilters.replaceChildren();
-  filters.forEach((domain) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = domain;
-    button.dataset.domain = domain;
-    if (state.filters.domain === domain) {
-      button.classList.add('is-active');
+function populateModuleForm(module) {
+  if (!state.auth.user || !['ADMIN', 'OPS'].includes(state.auth.user.role)) return;
+  const form = selectors.moduleForm;
+  form.elements.id.value = module.id;
+  form.elements.name.value = module.name;
+  form.elements.domain.value = module.domain;
+  form.elements.status.value = module.status;
+  form.elements.purpose.value = module.purpose;
+  form.elements.security_notes.value = module.security_notes || '';
+  form.elements.tags.value = (module.tags || []).join(', ');
+  form.elements.kpis.value = (module.kpis || []).join(', ');
+  form.elements.interfaces.value = (module.interfaces || [])
+    .map((iface) => `${iface.name}|${iface.description}`)
+    .join('\n');
+}
+
+function parseCommaList(value) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseInterfaces(value) {
+  return value
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name, description] = line.split('|').map((token) => token.trim());
+      return { name, description: description || '' };
+    });
+}
+
+function wireModules() {
+  const debouncedLoadModules = debounce(loadModules, 250);
+  selectors.moduleForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      name: formData.get('name'),
+      domain: formData.get('domain'),
+      status: formData.get('status'),
+      purpose: formData.get('purpose'),
+      security_notes: formData.get('security_notes'),
+      tags: parseCommaList(formData.get('tags') || ''),
+      kpis: parseCommaList(formData.get('kpis') || ''),
+      interfaces: parseInterfaces(formData.get('interfaces') || ''),
+    };
+    const id = formData.get('id');
+    try {
+      if (id) {
+        await apiFetch(`/api/modules/${id}`, { method: 'PUT', body: JSON.stringify({ ...payload }) });
+      } else {
+        await apiFetch('/api/modules', { method: 'POST', body: JSON.stringify(payload) });
+      }
+      event.currentTarget.reset();
+      await Promise.all([loadModules(), loadDashboard()]);
+    } catch (error) {
+      alert(error.message);
     }
-    button.addEventListener('click', () => {
-      state.filters.domain = domain;
-      renderDomainFilters();
-      applyModuleFilters();
-    });
-    selectors.domainFilters.appendChild(button);
   });
-}
 
-function applyModuleFilters() {
-  const query = state.filters.query.trim().toLowerCase();
-  const domain = state.filters.domain;
-  state.modules = state.allModules.filter((module) => {
-    const matchesDomain = domain === 'all' || module.domain === domain;
-    if (!matchesDomain) return false;
-    if (!query) return true;
-    const haystack = [
-      module.name,
-      module.domain,
-      module.purpose,
-      module.security,
-      module.tags.join(' '),
-      module.interfaces.join(' '),
-      module.kpis.join(' '),
-      module.mitigations.join(' '),
-    ]
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(query);
+  selectors.clearModuleForm?.addEventListener('click', () => selectors.moduleForm.reset());
+
+  selectors.moduleSearch?.addEventListener('input', (event) => {
+    state.filters.query = event.target.value;
+    debouncedLoadModules();
   });
-  renderModules();
-}
-
-function renderPatterns() {
-  if (!selectors.patternGrid) return;
-  const fragment = document.createDocumentFragment();
-  state.data.forge_patterns.forEach((pattern) => {
-    const card = document.createElement('article');
-    card.className = 'pattern-card';
-    card.innerHTML = `
-      <span class="badge">Blueprint</span>
-      <h3>${pattern.name}</h3>
-      <p>${pattern.focus}</p>
-      <strong>${pattern.value}</strong>
-      <p class="eyebrow">Components</p>
-      <ul>${pattern.components.map((item) => `<li>${item}</li>`).join('')}</ul>
-      <small>${pattern.signal}</small>
-    `;
-    fragment.appendChild(card);
+  selectors.moduleDomainFilter?.addEventListener('change', (event) => {
+    state.filters.domain = event.target.value;
+    loadModules();
   });
-  selectors.patternGrid.replaceChildren(fragment);
-}
-
-function renderStackLayers() {
-  if (!selectors.stackGrid || !state.data.stack_layers) return;
-  const fragment = document.createDocumentFragment();
-  state.data.stack_layers.forEach((layer) => {
-    const card = document.createElement('article');
-    card.className = 'stack-card';
-    card.innerHTML = `
-      <div class="stack-card__header">
-        <span class="badge">${layer.segment}</span>
-        <h3>${layer.focus}</h3>
-      </div>
-      <p>${layer.description}</p>
-      <p class="eyebrow">Artifacts</p>
-      <ul class="stack-card__artifacts">${layer.artifacts
-        .map((artifact) => `<li>${artifact}</li>`)
-        .join('')}</ul>
-      <small>${layer.signal}</small>
-    `;
-    fragment.appendChild(card);
+  selectors.moduleStatusFilter?.addEventListener('change', (event) => {
+    state.filters.status = event.target.value;
+    loadModules();
   });
-  selectors.stackGrid.replaceChildren(fragment);
-}
-
-function renderMissionServices() {
-  if (!selectors.serviceGrid || !state.data.mission_services) return;
-  const fragment = document.createDocumentFragment();
-  state.data.mission_services.forEach((service) => {
-    const card = document.createElement('article');
-    card.className = 'service-card';
-    card.innerHTML = `
-      <div class="service-card__header">
-        <h3>${service.name}</h3>
-        <span class="badge">${service.status}</span>
-      </div>
-      <p>${service.description}</p>
-      <p class="eyebrow">Touchpoints</p>
-      <ul>${service.touchpoints.map((file) => `<li>${file}</li>`).join('')}</ul>
-      <strong>${service.kpi}</strong>
-    `;
-    fragment.appendChild(card);
-  });
-  selectors.serviceGrid.replaceChildren(fragment);
-}
-
-function renderAssets() {
-  if (!selectors.assetGrid) return;
-  const fragment = document.createDocumentFragment();
-  state.data.forge_assets.forEach((asset) => {
-    const card = document.createElement('article');
-    card.className = 'asset-card';
-    card.innerHTML = `
-      <div class="asset-card__header">
-        <span class="badge">${asset.type}</span>
-        <strong>${asset.name}</strong>
-      </div>
-      <p>${asset.description}</p>
-      <p class="asset-origin">${asset.origin}</p>
-      <p class="eyebrow">Linked modules</p>
-      <ul class="chip-list">${asset.linked_modules.map((module) => `<li>${module}</li>`).join('')}</ul>
-    `;
-    fragment.appendChild(card);
-  });
-  selectors.assetGrid.replaceChildren(fragment);
-}
-
-function renderRepoStreams() {
-  if (!selectors.repoGrid || !state.data.repository_streams) return;
-  const fragment = document.createDocumentFragment();
-  state.data.repository_streams.forEach((repo) => {
-    const card = document.createElement('article');
-    card.className = 'repo-card';
-    card.innerHTML = `
-      <span class="badge">${repo.role}</span>
-      <h3>${repo.name}</h3>
-      <p>${repo.notes}</p>
-      <a href="${repo.url}" target="_blank" rel="noreferrer">View repository</a>
-    `;
-
-    if (repo.files?.length) {
-      const list = document.createElement('ul');
-      list.className = 'code-list';
-      repo.files.forEach((file) => {
-        const item = document.createElement('li');
-        item.textContent = file;
-        list.appendChild(item);
-      });
-      card.appendChild(list);
-    }
-    fragment.appendChild(card);
-  });
-  selectors.repoGrid.replaceChildren(fragment);
-}
-
-function renderFusionThreads() {
-  if (!selectors.fusionGrid || !state.data.fusion_threads) return;
-  const fragment = document.createDocumentFragment();
-  state.data.fusion_threads.forEach((thread) => {
-    const card = document.createElement('article');
-    card.className = 'thread-card';
-    card.innerHTML = `
-      <h3>${thread.title}</h3>
-      <p>${thread.description}</p>
-    `;
-
-    const grids = [
-      { label: 'v1.2 files', items: thread.hyperion_files },
-      { label: 'v0 files', items: thread.v0_files },
-      { label: 'Quantum forge files', items: thread.quantum_files },
-    ];
-
-    const listWrapper = document.createElement('div');
-    listWrapper.className = 'thread-columns';
-
-    grids.forEach((grid) => {
-      const column = document.createElement('article');
-      column.innerHTML = `<p class="eyebrow">${grid.label}</p>`;
-      const list = document.createElement('ul');
-      list.className = 'code-list';
-      (grid.items || []).forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        list.appendChild(li);
-      });
-      column.appendChild(list);
-      listWrapper.appendChild(column);
-    });
-
-    card.appendChild(listWrapper);
-    fragment.appendChild(card);
-  });
-  selectors.fusionGrid.replaceChildren(fragment);
-}
-
-function renderMissionScripts() {
-  if (!selectors.scriptList) return;
-  const fragment = document.createDocumentFragment();
-  state.data.mission_scripts.forEach((script) => {
-    const card = document.createElement('article');
-    card.className = 'script-card';
-    card.innerHTML = `
-      <header>
-        <span class="badge">${script.linked_pattern}</span>
-        <h3>${script.name}</h3>
-        <p>${script.context}</p>
-      </header>
-    `;
-    const steps = document.createElement('ol');
-    script.steps.forEach((step) => {
-      const li = document.createElement('li');
-      li.textContent = step;
-      steps.appendChild(li);
-    });
-    card.appendChild(steps);
-    fragment.appendChild(card);
-  });
-  selectors.scriptList.replaceChildren(fragment);
+  selectors.reloadModules?.addEventListener('click', loadModules);
 }
 
 function renderRoadmap() {
+  selectors.roadmapStages.replaceChildren();
   const fragment = document.createDocumentFragment();
-  state.data.roadmap_phases.forEach((phase, idx) => {
-    const completion = phase.percent;
+  state.stages.forEach((stage) => {
     const card = document.createElement('article');
-    card.className = 'roadmap-card';
+    card.className = 'stage-card';
     card.innerHTML = `
-      <div class="badge">Phase ${phase.phase}</div>
-      <h3>${phase.title}</h3>
-      <p>Milestones:</p>
-      <ul>${phase.milestones.map((milestone) => `<li>${milestone}</li>`).join('')}</ul>
-      <p>Deliverables:</p>
-      <ul>${phase.deliverables.map((item) => `<li>${item}</li>`).join('')}</ul>
-      <div class="progress-meter"><span style="width:${completion}%"></span></div>
-      <small>${completion}% of the macro roadmap complete.</small>
+      <header>
+        <div>
+          <p class="eyebrow">Stage</p>
+          <h3>${stage.name}</h3>
+        </div>
+        <span>${stage.progress || 0}%</span>
+      </header>
+      <p>${stage.description || 'No description provided.'}</p>
+      <div class="progress-bar"><span style="width:${stage.progress || 0}%"></span></div>
     `;
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+    stage.tasks.forEach((task) => {
+      const item = document.createElement('li');
+      item.className = 'task-item';
+      item.innerHTML = `
+        <span>${task.title} — <small>${task.owner || 'Unassigned'}</small></span>
+      `;
+      const select = document.createElement('select');
+      ['todo', 'in-progress', 'done'].forEach((status) => {
+        const option = new Option(status.replace('-', ' '), status);
+        option.selected = status === task.status;
+        select.appendChild(option);
+      });
+      select.disabled = !state.auth.user || !['ADMIN', 'OPS'].includes(state.auth.user.role);
+      select.addEventListener('change', () => updateTaskStatus(task.id, select.value));
+      item.appendChild(select);
+      list.appendChild(item);
+    });
+    card.appendChild(list);
+    if (stage.milestones?.length) {
+      const milestones = document.createElement('p');
+      milestones.textContent = `Milestones: ${stage.milestones.map((m) => `${m.name} (${m.target_date || 'TBD'})`).join(', ')}`;
+      card.appendChild(milestones);
+    }
     fragment.appendChild(card);
   });
-  selectors.roadmapTimeline.replaceChildren(fragment);
+  selectors.roadmapStages.appendChild(fragment);
+  rebuildStageSelect();
 }
 
-function renderRisks() {
-  const fragment = document.createDocumentFragment();
-  state.data.risks.forEach((risk, idx) => {
-    const item = document.createElement('li');
-    item.innerHTML = `
-      <strong>Risk ${idx + 1}: ${risk.name}</strong>
-      <span class="severity-badge" data-level="${risk.severity}">${risk.severity}</span>
-      <p>${risk.threat}</p>
-      <p><strong>Owner:</strong> ${risk.owner}</p>
-      <p>Mitigations:</p>
-      <ul>${risk.mitigation.map((line) => `<li>${line}</li>`).join('')}</ul>
-    `;
-    fragment.appendChild(item);
-  });
-  selectors.riskList.replaceChildren(fragment);
-}
-
-function renderStages() {
-  const total = state.data.stages.length - 1;
-  selectors.stageRange.max = total;
-  selectors.stageRange.value = state.activeStageIndex;
-  const updateStage = (nextIndex) => {
-    state.activeStageIndex = nextIndex;
-    const stage = state.data.stages[nextIndex];
-    selectors.stageNumber.textContent = `Stage ${stage.stage} · ${stage.signal}`;
-    selectors.stageDetail.textContent = stage.detail;
-    const completion = stage.percent;
-    selectors.stageProgressValue.textContent = `${completion}%`;
-    selectors.stageProgressFill.style.width = `${completion}%`;
-  };
-  selectors.stageRange.addEventListener('input', (event) => {
-    updateStage(Number(event.target.value));
-  });
-  updateStage(state.activeStageIndex);
-}
-
-function bindSearch() {
-  const input = document.getElementById('moduleSearch');
-  input.addEventListener('input', (event) => {
-    state.filters.query = event.target.value;
-    applyModuleFilters();
-  });
-}
-
-function bindInsights() {
-  const button = document.getElementById('insightButton');
-  const insightPhrases = [
-    () => `Stage ${state.data.stages[state.activeStageIndex].stage} stays synchronized with ${state.modules.length} forge-ready modules.`,
-    () => {
-      const pattern = state.data.forge_patterns[Math.floor(Math.random() * state.data.forge_patterns.length)];
-      return `${pattern.name} touches ${pattern.components.length} components for a ${pattern.value.toLowerCase()}`;
-    },
-    () => `Roadmap velocity: ${state.data.roadmap_phases[state.data.roadmap_phases.length - 1].percent}% completion target.`,
-    () => `${state.data.architecture_pillars[0]} anchors both confidential workloads and swarm telemetry.`,
-    () => {
-      const asset = state.data.forge_assets[Math.floor(Math.random() * state.data.forge_assets.length)];
-      return `${asset.name} from ${asset.origin} fuels ${asset.linked_modules.length} Hyperion modules.`;
-    },
-    () => {
-      const metric = state.data.lab_metrics[Math.floor(Math.random() * state.data.lab_metrics.length)];
-      return `Forge health pulse: ${metric.label} sits at ${metric.value}.`;
-    },
-  ];
-
-  button.addEventListener('click', () => {
-    const generator = insightPhrases[Math.floor(Math.random() * insightPhrases.length)];
-    selectors.insightOutput.textContent = generator();
-  });
-}
-
-function bindModuleDrawer() {
-  const closeDrawer = () => {
-    selectors.moduleDrawer.classList.remove('is-open');
-    selectors.moduleDrawer.setAttribute('aria-hidden', 'true');
-    state.activeModule = null;
-  };
-
-  selectors.moduleDrawerClose.addEventListener('click', closeDrawer);
-  selectors.moduleDrawer.addEventListener('click', (event) => {
-    if (event.target === selectors.moduleDrawer) {
-      closeDrawer();
-    }
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && selectors.moduleDrawer.classList.contains('is-open')) {
-      closeDrawer();
-    }
-  });
-
-  state.closeDrawer = closeDrawer;
-}
-
-function openModuleDrawer(module) {
-  state.activeModule = module;
-  selectors.moduleDrawerDomain.textContent = module.domain;
-  selectors.moduleDrawerTitle.textContent = module.name;
-  selectors.moduleDrawerSummary.textContent = module.purpose;
-  selectors.moduleDrawerInterfaces.innerHTML = module.interfaces.map((item) => `<li>${item}</li>`).join('');
-  selectors.moduleDrawerKpis.innerHTML = module.kpis.map((item) => `<li>${item}</li>`).join('');
-  selectors.moduleDrawerMitigations.innerHTML = module.mitigations.map((item) => `<li>${item}</li>`).join('');
-  selectors.moduleDrawerTags.textContent = `Tags: ${module.tags.join(', ')}`;
-  if (selectors.moduleDrawerSources) {
-    selectors.moduleDrawerSources.innerHTML = module.sources
-      ? module.sources.map((item) => `<li>${item}</li>`).join('')
-      : '<li>No linked files</li>';
+async function updateTaskStatus(id, status) {
+  try {
+    const task = state.stages.flatMap((stage) => stage.tasks).find((task) => task.id === id);
+    await apiFetch(`/api/tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title: task.title, owner: task.owner, status }),
+    });
+    await loadRoadmap();
+  } catch (error) {
+    alert(error.message);
   }
-  selectors.moduleDrawer.classList.add('is-open');
-  selectors.moduleDrawer.setAttribute('aria-hidden', 'false');
 }
 
-function renderLabMetrics() {
-  if (!selectors.labMetrics) return;
-  const fragment = document.createDocumentFragment();
-  state.data.lab_metrics.forEach((metric) => {
+function rebuildStageSelect() {
+  selectors.taskStageSelect.replaceChildren();
+  state.stages.forEach((stage) => {
+    const option = new Option(stage.name, stage.id);
+    selectors.taskStageSelect.appendChild(option);
+  });
+}
+
+function wireRoadmap() {
+  selectors.taskForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(formData.entries());
+    try {
+      await apiFetch('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
+      event.currentTarget.reset();
+      await loadRoadmap();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
+
+async function loadRoadmap() {
+  if (!state.auth.user) return;
+  try {
+    state.stages = await apiFetch('/api/roadmap');
+    renderRoadmap();
+  } catch (error) {
+    selectors.roadmapStages.textContent = error.message;
+  }
+}
+
+function renderArchitecture() {
+  selectors.nodeList.replaceChildren();
+  state.architecture.nodes.forEach((node) => {
     const card = document.createElement('article');
-    card.className = 'metric-card';
+    card.className = 'node-card';
     card.innerHTML = `
-      <p class="eyebrow">${metric.label}</p>
-      <h3>${metric.value}</h3>
-      <p>${metric.detail}</p>
-      ${metric.trend ? `<span class="metric-trend">${metric.trend}</span>` : ''}
+      <h3>${node.name}</h3>
+      <p>${node.type}</p>
+      <span>Status: ${node.status}</span>
+      <p>Owner: ${(node.metadata?.owner) || 'Unassigned'}</p>
     `;
-    fragment.appendChild(card);
+    selectors.nodeList.appendChild(card);
   });
-  selectors.labMetrics.replaceChildren(fragment);
 }
 
-function renderMatrix() {
-  if (!selectors.matrixTable) return;
-  const table = document.createElement('table');
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th scope="col">Module</th>
-        <th scope="col">Blueprints</th>
-      </tr>
-    </thead>
-  `;
-  const body = document.createElement('tbody');
-  state.data.modules.forEach((module) => {
-    const linkedPatterns = state.data.forge_patterns.filter((pattern) => pattern.components.includes(module.name));
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${module.name}</td>
-      <td>${linkedPatterns.length ? linkedPatterns.map((pattern) => `<span class="matrix-chip">${pattern.name}</span>`).join('') : '<span class="matrix-chip matrix-chip--empty">No direct blueprint</span>'}</td>
-    `;
-    body.appendChild(row);
+function wireArchitecture() {
+  selectors.nodeForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      name: formData.get('name'),
+      type: formData.get('type'),
+      status: formData.get('status'),
+      metadata: { owner: formData.get('owner') },
+    };
+    try {
+      await apiFetch('/api/architecture/nodes', { method: 'POST', body: JSON.stringify(payload) });
+      event.currentTarget.reset();
+      await Promise.all([loadArchitecture(), loadDashboard()]);
+    } catch (error) {
+      alert(error.message);
+    }
   });
-  table.appendChild(body);
-  selectors.matrixTable.replaceChildren(table);
+}
+
+async function loadArchitecture() {
+  if (!state.auth.user) return;
+  try {
+    state.architecture = await apiFetch('/api/architecture');
+    renderArchitecture();
+  } catch (error) {
+    selectors.nodeList.textContent = error.message;
+  }
+}
+
+function renderSecurity() {
+  selectors.riskList.replaceChildren();
+  state.security.risks.forEach((risk) => {
+    const li = document.createElement('li');
+    li.textContent = `${risk.title} — ${risk.severity.toUpperCase()} — ${risk.status}`;
+    selectors.riskList.appendChild(li);
+  });
+  selectors.controlList.replaceChildren();
+  state.security.controls.forEach((control) => {
+    const li = document.createElement('li');
+    li.textContent = `${control.framework} ${control.control_id} · ${control.status}`;
+    selectors.controlList.appendChild(li);
+  });
+  if (state.security.summary) {
+    selectors.riskTotal.textContent = state.security.summary.totalRisks;
+    selectors.riskHigh.textContent = state.security.summary.highSeverity;
+    selectors.riskOpen.textContent = state.security.summary.openRisks;
+    selectors.riskTop.textContent = state.security.summary.topRisk?.title || '—';
+  }
+}
+
+function wireSecurity() {
+  selectors.riskForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(formData.entries());
+    try {
+      await apiFetch('/api/security/risks', { method: 'POST', body: JSON.stringify(payload) });
+      event.currentTarget.reset();
+      await Promise.all([loadSecurity(), loadDashboard()]);
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+  selectors.refreshSecurity?.addEventListener('click', loadSecurity);
+}
+
+async function loadSecurity() {
+  if (!state.auth.user) return;
+  try {
+    const [risks, controls, summary] = await Promise.all([
+      apiFetch('/api/security/risks'),
+      apiFetch('/api/security/controls'),
+      apiFetch('/api/security/summary'),
+    ]);
+    state.security = { risks, controls, summary };
+    renderSecurity();
+  } catch (error) {
+    selectors.riskList.textContent = error.message;
+  }
+}
+
+function wireSimulation() {
+  selectors.startSimulation?.addEventListener('click', async () => {
+    try {
+      const simulation = await apiFetch('/api/simulations', { method: 'POST', body: JSON.stringify({}) });
+      selectors.simulationLog.textContent = `Simulation #${simulation.id} started...\n`;
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
+
+function connectWebSocket() {
+  if (state.ws) return;
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  state.ws = new WebSocket(`${protocol}://${window.location.host}/ws/simulations`);
+  state.ws.addEventListener('message', (event) => {
+    const { payload } = JSON.parse(event.data);
+    const line = `[${payload.timestamp}] (${payload.severity}) ${payload.message}`;
+    selectors.simulationLog.textContent += `\n${line}`;
+    selectors.simulationLog.scrollTop = selectors.simulationLog.scrollHeight;
+  });
+  state.ws.addEventListener('close', () => {
+    state.ws = null;
+  });
+}
+
+function debounce(fn, delay = 250) {
+  let timeout;
+  return function debounced(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+async function loadAllData() {
+  await Promise.all([loadDashboard(), loadModules(), loadRoadmap(), loadArchitecture(), loadSecurity()]);
+}
+
+function wireNavigation() {
+  document.querySelectorAll('.nav-link').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.nav-link').forEach((link) => link.classList.remove('active'));
+      button.classList.add('active');
+      const target = document.getElementById(button.dataset.target);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
+function bootstrap() {
+  loadAuth();
+  updateAuthUI();
+  wireAuth();
+  wireNavigation();
+  wireModules();
+  wireRoadmap();
+  wireArchitecture();
+  wireSecurity();
+  wireSimulation();
+  selectors.dashboardRefresh?.addEventListener('click', loadDashboard);
+  if (state.auth.user) {
+    connectWebSocket();
+    loadAllData();
+  }
 }
 
 bootstrap();
