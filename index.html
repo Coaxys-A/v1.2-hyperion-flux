@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyperion‑Flux Control Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="eyebrow">Hyperion‑Flux</p>
+        <h1>Modular Cyber Operations Flight Deck</h1>
+        <p class="lede" data-summary>
+          Loading mission data…
+        </p>
+        <div class="hero__stats">
+          <div class="stat">
+            <span data-pillars-count>0</span>
+            <p>Architecture Pillars</p>
+          </div>
+          <div class="stat">
+            <span data-modules-count>0</span>
+            <p>Capability Modules</p>
+          </div>
+          <div class="stat">
+            <span data-roadmap-count>0</span>
+            <p>Roadmap Phases</p>
+          </div>
+          <div class="stat">
+            <span data-stage-count>0</span>
+            <p>Lifecycle Stages</p>
+          </div>
+        </div>
+      </div>
+      <div class="hero__globe">
+        <div class="globe"></div>
+        <p>
+          Real‑time readiness derived from the Hyperion‑Flux prompt embedded in this
+          repository.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" id="stack">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Stack intelligence</p>
+            <h2>Coaxys v0 scaffolding</h2>
+            <p>
+              Every interface, module service, and SQL seed from
+              <span class="code-pill">github.com/Coaxys-A/v0-hyperion-flux</span>
+              is cataloged below so this dashboard mirrors the production Next.js + NestJS
+              build.
+            </p>
+          </div>
+        </div>
+        <div class="grid stack-grid" id="stackGrid"></div>
+      </section>
+
+      <section class="panel" id="pillars">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Architecture</p>
+            <h2>Core pillars</h2>
+            <p>
+              The backbone of Hyperion‑Flux spans confidential computing, zero‑trust
+              meshes, and adaptive telemetry. Explore each pillar to understand how the
+              system keeps the swarm resilient.
+            </p>
+          </div>
+        </div>
+        <div class="grid pillars" id="pillarGrid"></div>
+      </section>
+
+      <section class="panel" id="modules">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Capabilities</p>
+            <h2>Modular intelligence packages</h2>
+            <p>
+              Modules capture the actionable parts of Hyperion‑Flux. Search and filter the
+              catalog to find the interfaces or threat mitigations you need.
+            </p>
+          </div>
+          <div class="controls">
+            <input
+              id="moduleSearch"
+              type="search"
+              placeholder="Search modules, KPIs, or mitigations"
+              aria-label="Search modules"
+            />
+            <button id="insightButton">Generate insight</button>
+          </div>
+        </div>
+        <div class="filter-chips" id="domainFilters" aria-label="Filter modules by domain"></div>
+        <p class="insight" id="insightOutput">Tap “Generate insight” to surface a pattern.</p>
+        <div class="grid modules" id="moduleGrid"></div>
+        <p class="module-empty" id="moduleEmpty" hidden>No modules match the current search and domain filters.</p>
+        <p class="module-hint">Select any module to open the forge brief sourced from the Quantum Cyber Forge kit.</p>
+      </section>
+
+      <section class="panel" id="patterns">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Blueprints</p>
+            <h2>Forge patterns</h2>
+            <p>
+              Cross-reference Hyperion-Flux modules with the quantum-cyber-forge playbooks. These blueprints illustrate how the
+              repos merge to accelerate releases.
+            </p>
+          </div>
+        </div>
+        <div class="grid patterns" id="patternGrid"></div>
+      </section>
+
+      <section class="panel" id="assets">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Reference kit</p>
+            <h2>Forge assets</h2>
+            <p>
+              Pull artifacts straight from the quantum-cyber-forge-86c4ede5 repo—pipelines, harnesses, dashboards, and registries that power Hyperion deployments.
+            </p>
+          </div>
+        </div>
+        <div class="grid assets" id="assetGrid"></div>
+      </section>
+
+      <section class="panel" id="services">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Mission services</p>
+            <h2>Full-stack control</h2>
+            <p>
+              Backend controllers, DTOs, and SQL plans from the v0 repository map one-to-one with Hyperion’s module registry,
+              roadmap, security, simulation, and billing consoles.
+            </p>
+          </div>
+        </div>
+        <div class="grid service-grid" id="serviceGrid"></div>
+      </section>
+
+      <section class="panel" id="scripts">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Mission playbooks</p>
+            <h2>Forge scripts</h2>
+            <p>
+              Every script is mapped to a forge file and pattern so operators can follow Guardian Sweep, Cipher Cascade, and Radiant Archive drills end-to-end.
+            </p>
+          </div>
+        </div>
+        <div class="script-list" id="scriptList"></div>
+      </section>
+
+      <section class="panel" id="lab">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Lab telemetry</p>
+            <h2>Forge health</h2>
+            <p>
+              Synthesize metrics taken directly from forge pipelines, scenarios, and runbooks, plus see how modules align to each forge blueprint.
+            </p>
+          </div>
+        </div>
+        <div class="lab-metrics" id="labMetrics"></div>
+        <div>
+          <h3 class="matrix-title">Module ↔ Pattern alignment</h3>
+          <div class="matrix-table" id="matrixTable"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="roadmap">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Roadmap</p>
+            <h2>Phase tracker</h2>
+            <p>
+              Each phase repeats a disciplined cycle—design, prototype, integrate, audit,
+              and release. The timeline highlights the current level of completion and
+              milestones.
+            </p>
+          </div>
+        </div>
+        <div class="roadmap" id="roadmapTimeline"></div>
+      </section>
+
+      <section class="panel" id="risks">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Operational guardrails</p>
+            <h2>Risk register</h2>
+            <p>
+              Hyperion‑Flux anticipates high‑impact risks and ties each to a mitigation play.
+              Track the active risks below.
+            </p>
+          </div>
+        </div>
+        <ul class="risk-list" id="riskList"></ul>
+      </section>
+
+      <section class="panel" id="stages">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Lifecycle</p>
+            <h2>Stage navigator</h2>
+            <p>
+              Drag the slider to move through the 0‑to‑100 journey encoded in the prompt. We
+              surface the current stage narrative and completion percentage.
+            </p>
+          </div>
+        </div>
+        <div class="stage-controller">
+          <div class="stage-details">
+            <div>
+              <p class="eyebrow">Active Stage</p>
+              <h3 data-stage-number>Stage 0</h3>
+            </div>
+            <p data-stage-detail>Loading…</p>
+          </div>
+          <div class="stage-progress">
+            <span class="stage-progress__value" data-stage-progress>0%</span>
+            <div class="progress-bar">
+              <div class="fill" data-stage-progress-fill></div>
+            </div>
+          </div>
+          <input type="range" id="stageRange" min="0" value="0" step="1" />
+        </div>
+      </section>
+    </main>
+
+    <section class="module-drawer" id="moduleDrawer" aria-hidden="true">
+      <div class="module-drawer__content" role="dialog" aria-labelledby="moduleDrawerTitle">
+        <button class="module-drawer__close" type="button" data-module-close aria-label="Close module details">×</button>
+        <p class="eyebrow" data-module-domain></p>
+        <h3 id="moduleDrawerTitle" data-module-title>Module</h3>
+        <p data-module-summary></p>
+        <div class="drawer-grid">
+          <article>
+            <h4>Interfaces</h4>
+            <ul data-module-interfaces></ul>
+          </article>
+          <article>
+            <h4>KPIs</h4>
+            <ul data-module-kpis></ul>
+          </article>
+          <article>
+            <h4>Mitigations</h4>
+            <ul data-module-mitigations></ul>
+          </article>
+        </div>
+        <p class="drawer-footnote" data-module-tags></p>
+      </div>
+    </section>
+
+    <footer>
+      <p>
+        Built directly from the Hyperion‑Flux prompt stored in <code>HyperionFlux_prompt_15MB.txt</code>.
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

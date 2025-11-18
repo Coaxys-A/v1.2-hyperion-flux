@@ -1,0 +1,404 @@
+{
+  "project": "Hyperion-Flux",
+  "language": "English",
+  "version": "3.0-quantum-forge-fusion",
+  "summary": "Hyperion-Flux now absorbs Quantum Cyber Forge playbooks, datasets, and lab kits. Every module, blueprint, and risk thread references concrete forge artifacts so the merged control room can steer builds, rehearsals, and zero-knowledge releases in one place.",
+  "architecture_pillars": [
+    "Digital-Twin Engine",
+    "Swarm AI",
+    "Confidential-Computing",
+    "Wasm Micro-Kernel",
+    "eBPF Telemetry",
+    "PQC Zero-Trust Mesh",
+    "Blockchain SBOM"
+  ],
+  "modules": [
+    {
+      "name": "Sentinel Mesh",
+      "domain": "PQC Zero-Trust",
+      "purpose": "Quantum-safe identity fabric that choreographs drone-to-drone trust exchanges.",
+      "security": "Rotates lattice signatures every hop and snapshots trust ledgers into the forge ledger.",
+      "kpis": [
+        "Handshake drift < 2 ms",
+        "99.999% channel integrity"
+      ],
+      "interfaces": ["gRPC control plane", "Rust SDK", "meshctl"],
+      "mitigations": [
+        "Dual lattice rotation",
+        "Time-sliced attestation"
+      ],
+      "tags": ["mesh", "identity", "pqc"]
+    },
+    {
+      "name": "ForgeOps Studio",
+      "domain": "Mission Design",
+      "purpose": "Design surface that pairs Hyperion modules with Quantum Cyber Forge build templates.",
+      "security": "Blueprint diffing detects rogue knobs before deployment.",
+      "kpis": ["<12 hrs blueprint-to-flight", "90% automated QA"],
+      "interfaces": ["Web IDE", "GraphQL", "Design tokens"],
+      "mitigations": ["Policy guardrails", "Auto rollback"],
+      "tags": ["design", "orchestration", "ui"]
+    },
+    {
+      "name": "Twin Reactor",
+      "domain": "Digital Twin",
+      "purpose": "Streams Wasm micro-sims that shadow every asset in the swarm.",
+      "security": "Runs inside confidential enclaves with deterministic replay.",
+      "kpis": ["<50 ms divergence", "Telemetry confidence 0.98"],
+      "interfaces": ["Wasm modules", "Event mesh", "Twin CLI"],
+      "mitigations": ["State notarization", "Drift alarms"],
+      "tags": ["twin", "simulation", "telemetry"]
+    },
+    {
+      "name": "Flux Orchestrator",
+      "domain": "Automation",
+      "purpose": "Schedules upgrades, applies forge recipes, and reconciles sbom deltas.",
+      "security": "Signed eBPF hooks inspect every deployment step.",
+      "kpis": ["<5 min upgrade window", "0 CVEs promoted"],
+      "interfaces": ["Workflow DSL", "GitOps webhook", "CLI"],
+      "mitigations": ["Shadow rollout", "Policy lattice"],
+      "tags": ["automation", "gitops", "sbom"]
+    },
+    {
+      "name": "Helios Telemetry",
+      "domain": "Observability",
+      "purpose": "eBPF-powered observability stack with forge-grade correlation views.",
+      "security": "Kernel probes signed and streamed through PQC tunnel.",
+      "kpis": ["3 s mean detection", "Full swarm traceability"],
+      "interfaces": ["Streaming API", "Dashboards", "Alert webhooks"],
+      "mitigations": ["Probe sandboxing", "Ledger retention"],
+      "tags": ["telemetry", "ebpf", "observability"]
+    },
+    {
+      "name": "Aegis Compiler",
+      "domain": "Runtime",
+      "purpose": "Wasm-to-metal compiler borrowed from the Coaxys Quantum Cyber Forge stack.",
+      "security": "Deterministic build attestations hashed into SBOM.",
+      "kpis": ["<10% perf loss", "100% reproducible builds"],
+      "interfaces": ["CLI", "GitHub Action", "Wasm ABI"],
+      "mitigations": ["Secure enclaves", "Immutable runners"],
+      "tags": ["compiler", "runtime", "build"]
+    },
+    {
+      "name": "Mimir Risk Board",
+      "domain": "Risk",
+      "purpose": "Active risk graph that correlates Hyperion mitigations with forge telemetry.",
+      "security": "Anomaly detector routes events through zero-knowledge summaries.",
+      "kpis": ["<4 hrs mean mitigation", "Risk debt < 3"],
+      "interfaces": ["Graph API", "Risk DSL", "Slackbot"],
+      "mitigations": ["Adaptive policies", "Ledger notarization"],
+      "tags": ["risk", "governance", "analytics"]
+    },
+    {
+      "name": "Chronicle Ledger",
+      "domain": "SBOM",
+      "purpose": "Blockchain-backed SBOM that merges Hyperion modules with forge artifacts.",
+      "security": "Zero-knowledge proof on each component merge.",
+      "kpis": ["<2 sec notarization", "Ledger finality 12 blocks"],
+      "interfaces": ["REST", "CLI", "SBOM SDK"],
+      "mitigations": ["Proof compression", "Roll-up relays"],
+      "tags": ["sbom", "ledger", "compliance"]
+    }
+  ],
+  "forge_patterns": [
+    {
+      "name": "Quantum Cyber Forge",
+      "focus": "Imports Coaxys forge build scripts so Hyperion modules compile with deterministic PQC pipelines.",
+      "components": ["Aegis Compiler", "Sentinel Mesh", "Chronicle Ledger"],
+      "value": "Cuts integration time by 45% via shared artifacts.",
+      "signal": "Sourced from quantum-cyber-forge-86c4ede5"
+    },
+    {
+      "name": "Swarm Defense Halo",
+      "focus": "Blends Twin Reactor sims with ForgeOps Studio playbooks to rehearse cyber maneuvers.",
+      "components": ["Twin Reactor", "ForgeOps Studio", "Helios Telemetry"],
+      "value": "Simulated rehearsals reduce risk debt by 32%.",
+      "signal": "Coaches gleaned from forge notebooks"
+    },
+    {
+      "name": "Zero-Knowledge Release",
+      "focus": "Chronicle Ledger notarizes Flux Orchestrator releases with zk-SBOM packages.",
+      "components": ["Flux Orchestrator", "Chronicle Ledger"],
+      "value": "Auditors validate releases without seeing payloads.",
+      "signal": "Adapts forge roll-up patterns"
+    },
+    {
+      "name": "Mesh Telemetry Loop",
+      "focus": "Helios Telemetry autopopulates Sentinel Mesh baselines for PQC trust tuning.",
+      "components": ["Helios Telemetry", "Sentinel Mesh"],
+      "value": "Auto-tunes trust levels weekly with no downtime.",
+      "signal": "Mirror of forge feedback loop"
+    }
+  ],
+  "forge_assets": [
+    {
+      "name": "Aurora PQC Lattice",
+      "type": "Pipeline",
+      "description": "CI pipeline from quantum-cyber-forge-86c4ede5/pipelines/aurora-lattice.yaml that feeds Sentinel Mesh certificate refreshes.",
+      "origin": "pipelines/aurora-lattice.yaml",
+      "linked_modules": ["Sentinel Mesh", "Chronicle Ledger"]
+    },
+    {
+      "name": "Specter Mesh Harness",
+      "type": "Lab Harness",
+      "description": "labs/mesh-harness/README.md scripts replay PQC trust storms before rollouts.",
+      "origin": "labs/mesh-harness/README.md",
+      "linked_modules": ["Sentinel Mesh", "Helios Telemetry"]
+    },
+    {
+      "name": "Catalyst Telemetry Pack",
+      "type": "Dashboard",
+      "description": "dashboards/catalyst/overview.json visualizes every eBPF probe across Hyperion and Forge clusters.",
+      "origin": "dashboards/catalyst/overview.json",
+      "linked_modules": ["Helios Telemetry", "Mimir Risk Board"]
+    },
+    {
+      "name": "Ion SBOM Registry",
+      "type": "Registry",
+      "description": "registry/ion-ledger.md extends Chronicle Ledger roll-ups with forge attestations.",
+      "origin": "registry/ion-ledger.md",
+      "linked_modules": ["Chronicle Ledger", "Flux Orchestrator"]
+    }
+  ],
+  "stack_layers": [
+    {
+      "segment": "Interface stack",
+      "focus": "Next.js 16 + React 19 cockpit",
+      "description": "The v0 Hyperion-Flux front-end pairs the app router with Space Grotesk theming, Zustand state, and shadcn/ui primitives so ops data streams render instantly.",
+      "artifacts": ["app/dashboard/page.tsx", "app/layout.tsx", "components/ui/card.tsx"],
+      "signal": "Sourced from Coaxys-A/v0-hyperion-flux"
+    },
+    {
+      "segment": "Operations brain",
+      "focus": "NestJS 10 service mesh",
+      "description": "server/src/app.module.ts wires modules for auth, modules, roadmap, security, docs, and payments with Prisma + Neon connectivity.",
+      "artifacts": [
+        "server/src/app.module.ts",
+        "server/src/modules/roadmap/roadmap.service.ts",
+        "server/src/modules/simulation/simulation.service.ts"
+      ],
+      "signal": "Mirrors the v0 backend topology"
+    },
+    {
+      "segment": "Realtime fabric",
+      "focus": "Socket.IO telemetry loop",
+      "description": "Events gateway streams simulation ticks, health pings, and alerts via server/src/websockets/events.gateway.ts and the paired module.",
+      "artifacts": [
+        "server/src/websockets/events.gateway.ts",
+        "server/src/websockets/websockets.module.ts",
+        "server/src/modules/health/health.controller.ts"
+      ],
+      "signal": "Keeps mission rehearsal data live"
+    },
+    {
+      "segment": "Data & compliance",
+      "focus": "Prisma schema + SQL seeds",
+      "description": "The Prisma schema and SQL seeds encode subscriptions, roadmap stages, and doc metadata so the merged control room inherits production tables.",
+      "artifacts": ["prisma/schema.prisma", "scripts/01-init-schema.sql", "scripts/02-seed-plans.sql"],
+      "signal": "Feeds Chronicle Ledger + payments"
+    }
+  ],
+  "mission_services": [
+    {
+      "name": "Module Registry",
+      "description": "CRUD services expose module metadata, KPIs, and tags so the dashboard catalog stays synced with the Nest backend.",
+      "touchpoints": [
+        "server/src/modules/modules/modules.controller.ts",
+        "server/src/modules/modules/modules.service.ts",
+        "prisma/schema.prisma"
+      ],
+      "kpi": "<200 ms module lookups",
+      "status": "Live"
+    },
+    {
+      "name": "Roadmap Management",
+      "description": "26-stage planner with milestones, tasks, and progress captured through DTOs and Prisma models.",
+      "touchpoints": [
+        "server/src/modules/roadmap/roadmap.controller.ts",
+        "server/src/modules/roadmap/dto/update-stage.dto.ts",
+        "scripts/01-init-schema.sql"
+      ],
+      "kpi": "Roadmap sync hourly",
+      "status": "Live"
+    },
+    {
+      "name": "Architecture Visualizer",
+      "description": "Graph endpoints let operators edit seven architecture layers with strongly-typed DTOs so UI diagrams never drift.",
+      "touchpoints": [
+        "server/src/modules/architecture/architecture.controller.ts",
+        "server/src/modules/architecture/dto/create-component.dto.ts",
+        "server/src/modules/architecture/architecture.service.ts"
+      ],
+      "kpi": "<1s graph mutation",
+      "status": "Beta"
+    },
+    {
+      "name": "Security Center",
+      "description": "Risk, control, and finding models enforce PQC guardrails with DTO validation and JWT-protected routes.",
+      "touchpoints": [
+        "server/src/modules/security/security.controller.ts",
+        "server/src/modules/security/dto/create-risk.dto.ts",
+        "server/src/modules/security/security.service.ts"
+      ],
+      "kpi": "3s risk triage",
+      "status": "Live"
+    },
+    {
+      "name": "Simulation Engine",
+      "description": "Simulation services and the Socket.IO gateway broadcast red/blue drills that Twin Reactor can replay in the UI.",
+      "touchpoints": [
+        "server/src/modules/simulation/simulation.service.ts",
+        "server/src/modules/simulation/simulation.controller.ts",
+        "server/src/websockets/events.gateway.ts"
+      ],
+      "kpi": "60 FPS mission feed",
+      "status": "In rehearsal"
+    },
+    {
+      "name": "Payments & Billing",
+      "description": "Stripe-backed plans, checkout sessions, and upgrades keep Hyperion subscriptions aligned with mission posture.",
+      "touchpoints": [
+        "server/src/modules/payments/payments.controller.ts",
+        "server/src/modules/payments/dto/create-plan.dto.ts",
+        "scripts/02-seed-plans.sql"
+      ],
+      "kpi": "<5 min plan switch",
+      "status": "Live"
+    },
+    {
+      "name": "Documentation Portal",
+      "description": "Docs endpoints with Markdown metadata feed the UI knowledge base and align with mission scripts.",
+      "touchpoints": [
+        "server/src/modules/docs/docs.controller.ts",
+        "server/src/modules/docs/docs.service.ts",
+        "app/page.tsx"
+      ],
+      "kpi": "Instant doc search",
+      "status": "Live"
+    }
+  ],
+  "mission_scripts": [
+    {
+      "name": "Guardian Sweep",
+      "context": "Nightly rehearsal lifted from scenarios/guardian-sweep.md.",
+      "linked_pattern": "Swarm Defense Halo",
+      "steps": [
+        "Spin up Twin Reactor sandboxes",
+        "Apply Specter Mesh Harness chaos profile",
+        "Stream Helios Telemetry anomalies into Mimir",
+        "Commit Chronicle Ledger audit pack"
+      ]
+    },
+    {
+      "name": "Cipher Cascade",
+      "context": "pipelines/cipher-cascade.yml orchestrates PQC rotations during high-threat events.",
+      "linked_pattern": "Quantum Cyber Forge",
+      "steps": [
+        "Freeze Flux Orchestrator deploy queue",
+        "Trigger Aurora PQC Lattice batch",
+        "Push zk-SBOM bundle via Ion Registry",
+        "Resume orchestrator with new trust graph"
+      ]
+    },
+    {
+      "name": "Radiant Archive",
+      "context": "runbooks/radiant-archive.md codifies ledger recovery.",
+      "linked_pattern": "Zero-Knowledge Release",
+      "steps": [
+        "Snapshot Chronicle Ledger shards",
+        "Verify SBOM diffs inside Aegis enclaves",
+        "Mirror data to forge cold storage",
+        "Update ForgeOps Studio incident board"
+      ]
+    }
+  ],
+  "lab_metrics": [
+    {
+      "label": "Forge syncs/week",
+      "value": "42",
+      "detail": "Derived from pipelines/*.yml across the forge repo"
+    },
+    {
+      "label": "Deterministic builds",
+      "value": "128",
+      "detail": "Aegis Compiler runs in builds/",
+      "trend": "+8%"
+    },
+    {
+      "label": "Twin sim coverage",
+      "value": "93%",
+      "detail": "scenarios/ suites consumed by Twin Reactor"
+    },
+    {
+      "label": "Incident-free days",
+      "value": "74",
+      "detail": "Risk logs from runbooks/",
+      "trend": "+11"
+    }
+  ],
+  "roadmap_phases": [
+    {
+      "phase": "P1",
+      "title": "Forge the twin core",
+      "percent": 35,
+      "milestones": ["Design", "Prototype", "Integration", "Audit", "Release"],
+      "deliverables": ["Twin Reactor alpha", "Sentinel Mesh lattice grid"]
+    },
+    {
+      "phase": "P2",
+      "title": "Harden the mesh",
+      "percent": 55,
+      "milestones": ["Design", "Prototype", "Integration", "Audit", "Release"],
+      "deliverables": ["Chronicle Ledger", "Helios Telemetry"]
+    },
+    {
+      "phase": "P3",
+      "title": "Automate the forge",
+      "percent": 78,
+      "milestones": ["Design", "Prototype", "Integration", "Audit", "Release"],
+      "deliverables": ["Flux Orchestrator", "ForgeOps Studio"]
+    },
+    {
+      "phase": "P4",
+      "title": "Prove-release",
+      "percent": 92,
+      "milestones": ["Design", "Prototype", "Integration", "Audit", "Release"],
+      "deliverables": ["Zero-knowledge release", "Mission rehearsal"]
+    }
+  ],
+  "risks": [
+    {
+      "name": "Quantum latency drift",
+      "threat": "PQC handshake jitter could desync swarm commands.",
+      "mitigation": ["Dual lattice rotation", "Time-sliced attestation"],
+      "severity": "high",
+      "owner": "Mesh SRE"
+    },
+    {
+      "name": "Kernel probe regressions",
+      "threat": "Unsigned eBPF probes from third-party forge modules.",
+      "mitigation": ["Signed artifact enforcement", "ForgeOps policy pack"],
+      "severity": "medium",
+      "owner": "Observability guild"
+    },
+    {
+      "name": "Ledger backlog",
+      "threat": "Chronicle Ledger roll-ups stall during audits.",
+      "mitigation": ["Layer-2 relays", "Adaptive batching"],
+      "severity": "medium",
+      "owner": "Compliance ops"
+    }
+  ],
+  "stages": [
+    { "stage": 0, "detail": "Stage 0 seeds the digital-twin backlog and forks forge starter kits.", "signal": "Ideation", "percent": 5 },
+    { "stage": 1, "detail": "Stage 1 connects Sentinel Mesh to the forge PQC lab for baseline trust charts.", "signal": "Mesh bring-up", "percent": 12 },
+    { "stage": 2, "detail": "Stage 2 ingests forge notebooks to harden Wasm modules.", "signal": "Compiler alignment", "percent": 25 },
+    { "stage": 3, "detail": "Stage 3 runs swarm rehearsals with Twin Reactor and ForgeOps Studio.", "signal": "Simulation", "percent": 40 },
+    { "stage": 4, "detail": "Stage 4 links Helios Telemetry into Chronicle Ledger for zk-audits.", "signal": "Observability", "percent": 55 },
+    { "stage": 5, "detail": "Stage 5 ships Flux Orchestrator playbooks to the forge automation lane.", "signal": "Automation", "percent": 70 },
+    { "stage": 6, "detail": "Stage 6 validates zero-knowledge releases for every module pair.", "signal": "Prove-release", "percent": 82 },
+    { "stage": 7, "detail": "Stage 7 crowds tests PQC meshes with partner labs.", "signal": "Coalition QA", "percent": 91 },
+    { "stage": 8, "detail": "Stage 8 green-lights global deployment with forge-wrapped runbooks.", "signal": "Go-live", "percent": 97 },
+    { "stage": 9, "detail": "Stage 9 loops telemetry back into the forge backlog for continuous hardening.", "signal": "Feedback", "percent": 100 }
+  ]
+}
