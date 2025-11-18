@@ -30,6 +30,8 @@ const selectors = {
   patternGrid: document.getElementById('patternGrid'),
   domainFilters: document.getElementById('domainFilters'),
   assetGrid: document.getElementById('assetGrid'),
+  stackGrid: document.getElementById('stackGrid'),
+  serviceGrid: document.getElementById('serviceGrid'),
   scriptList: document.getElementById('scriptList'),
   labMetrics: document.getElementById('labMetrics'),
   matrixTable: document.getElementById('matrixTable'),
@@ -58,6 +60,8 @@ async function bootstrap() {
     applyModuleFilters();
     renderPatterns();
     renderAssets();
+    renderStackLayers();
+    renderMissionServices();
     renderMissionScripts();
     renderRoadmap();
     renderRisks();
@@ -197,6 +201,50 @@ function renderPatterns() {
     fragment.appendChild(card);
   });
   selectors.patternGrid.replaceChildren(fragment);
+}
+
+function renderStackLayers() {
+  if (!selectors.stackGrid || !state.data.stack_layers) return;
+  const fragment = document.createDocumentFragment();
+  state.data.stack_layers.forEach((layer) => {
+    const card = document.createElement('article');
+    card.className = 'stack-card';
+    card.innerHTML = `
+      <div class="stack-card__header">
+        <span class="badge">${layer.segment}</span>
+        <h3>${layer.focus}</h3>
+      </div>
+      <p>${layer.description}</p>
+      <p class="eyebrow">Artifacts</p>
+      <ul class="stack-card__artifacts">${layer.artifacts
+        .map((artifact) => `<li>${artifact}</li>`)
+        .join('')}</ul>
+      <small>${layer.signal}</small>
+    `;
+    fragment.appendChild(card);
+  });
+  selectors.stackGrid.replaceChildren(fragment);
+}
+
+function renderMissionServices() {
+  if (!selectors.serviceGrid || !state.data.mission_services) return;
+  const fragment = document.createDocumentFragment();
+  state.data.mission_services.forEach((service) => {
+    const card = document.createElement('article');
+    card.className = 'service-card';
+    card.innerHTML = `
+      <div class="service-card__header">
+        <h3>${service.name}</h3>
+        <span class="badge">${service.status}</span>
+      </div>
+      <p>${service.description}</p>
+      <p class="eyebrow">Touchpoints</p>
+      <ul>${service.touchpoints.map((file) => `<li>${file}</li>`).join('')}</ul>
+      <strong>${service.kpi}</strong>
+    `;
+    fragment.appendChild(card);
+  });
+  selectors.serviceGrid.replaceChildren(fragment);
 }
 
 function renderAssets() {

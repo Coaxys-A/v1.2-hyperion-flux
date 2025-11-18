@@ -120,6 +120,19 @@ main {
   box-shadow: 0 35px 80px rgba(0, 0, 0, 0.35);
 }
 
+.code-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Space Mono', 'Space Grotesk', monospace;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(69, 241, 255, 0.35);
+  color: var(--accent-strong);
+}
+
 .section-heading {
   display: flex;
   flex-wrap: wrap;
@@ -358,6 +371,84 @@ main {
   border-radius: 0.4rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.stack-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.stack-card {
+  background: var(--bg-panel-alt);
+  border-radius: 18px;
+  padding: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stack-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stack-card__artifacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: 'Space Mono', 'Space Grotesk', monospace;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stack-card__artifacts li {
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.service-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.service-card {
+  background: var(--bg-panel-alt);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.service-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.service-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: 'Space Mono', 'Space Grotesk', monospace;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.service-card strong {
+  color: var(--accent-strong);
+  font-size: 0.95rem;
 }
 
 .pattern-card {

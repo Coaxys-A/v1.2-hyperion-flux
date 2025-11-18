@@ -160,6 +160,123 @@
       "linked_modules": ["Chronicle Ledger", "Flux Orchestrator"]
     }
   ],
+  "stack_layers": [
+    {
+      "segment": "Interface stack",
+      "focus": "Next.js 16 + React 19 cockpit",
+      "description": "The v0 Hyperion-Flux front-end pairs the app router with Space Grotesk theming, Zustand state, and shadcn/ui primitives so ops data streams render instantly.",
+      "artifacts": ["app/dashboard/page.tsx", "app/layout.tsx", "components/ui/card.tsx"],
+      "signal": "Sourced from Coaxys-A/v0-hyperion-flux"
+    },
+    {
+      "segment": "Operations brain",
+      "focus": "NestJS 10 service mesh",
+      "description": "server/src/app.module.ts wires modules for auth, modules, roadmap, security, docs, and payments with Prisma + Neon connectivity.",
+      "artifacts": [
+        "server/src/app.module.ts",
+        "server/src/modules/roadmap/roadmap.service.ts",
+        "server/src/modules/simulation/simulation.service.ts"
+      ],
+      "signal": "Mirrors the v0 backend topology"
+    },
+    {
+      "segment": "Realtime fabric",
+      "focus": "Socket.IO telemetry loop",
+      "description": "Events gateway streams simulation ticks, health pings, and alerts via server/src/websockets/events.gateway.ts and the paired module.",
+      "artifacts": [
+        "server/src/websockets/events.gateway.ts",
+        "server/src/websockets/websockets.module.ts",
+        "server/src/modules/health/health.controller.ts"
+      ],
+      "signal": "Keeps mission rehearsal data live"
+    },
+    {
+      "segment": "Data & compliance",
+      "focus": "Prisma schema + SQL seeds",
+      "description": "The Prisma schema and SQL seeds encode subscriptions, roadmap stages, and doc metadata so the merged control room inherits production tables.",
+      "artifacts": ["prisma/schema.prisma", "scripts/01-init-schema.sql", "scripts/02-seed-plans.sql"],
+      "signal": "Feeds Chronicle Ledger + payments"
+    }
+  ],
+  "mission_services": [
+    {
+      "name": "Module Registry",
+      "description": "CRUD services expose module metadata, KPIs, and tags so the dashboard catalog stays synced with the Nest backend.",
+      "touchpoints": [
+        "server/src/modules/modules/modules.controller.ts",
+        "server/src/modules/modules/modules.service.ts",
+        "prisma/schema.prisma"
+      ],
+      "kpi": "<200 ms module lookups",
+      "status": "Live"
+    },
+    {
+      "name": "Roadmap Management",
+      "description": "26-stage planner with milestones, tasks, and progress captured through DTOs and Prisma models.",
+      "touchpoints": [
+        "server/src/modules/roadmap/roadmap.controller.ts",
+        "server/src/modules/roadmap/dto/update-stage.dto.ts",
+        "scripts/01-init-schema.sql"
+      ],
+      "kpi": "Roadmap sync hourly",
+      "status": "Live"
+    },
+    {
+      "name": "Architecture Visualizer",
+      "description": "Graph endpoints let operators edit seven architecture layers with strongly-typed DTOs so UI diagrams never drift.",
+      "touchpoints": [
+        "server/src/modules/architecture/architecture.controller.ts",
+        "server/src/modules/architecture/dto/create-component.dto.ts",
+        "server/src/modules/architecture/architecture.service.ts"
+      ],
+      "kpi": "<1s graph mutation",
+      "status": "Beta"
+    },
+    {
+      "name": "Security Center",
+      "description": "Risk, control, and finding models enforce PQC guardrails with DTO validation and JWT-protected routes.",
+      "touchpoints": [
+        "server/src/modules/security/security.controller.ts",
+        "server/src/modules/security/dto/create-risk.dto.ts",
+        "server/src/modules/security/security.service.ts"
+      ],
+      "kpi": "3s risk triage",
+      "status": "Live"
+    },
+    {
+      "name": "Simulation Engine",
+      "description": "Simulation services and the Socket.IO gateway broadcast red/blue drills that Twin Reactor can replay in the UI.",
+      "touchpoints": [
+        "server/src/modules/simulation/simulation.service.ts",
+        "server/src/modules/simulation/simulation.controller.ts",
+        "server/src/websockets/events.gateway.ts"
+      ],
+      "kpi": "60 FPS mission feed",
+      "status": "In rehearsal"
+    },
+    {
+      "name": "Payments & Billing",
+      "description": "Stripe-backed plans, checkout sessions, and upgrades keep Hyperion subscriptions aligned with mission posture.",
+      "touchpoints": [
+        "server/src/modules/payments/payments.controller.ts",
+        "server/src/modules/payments/dto/create-plan.dto.ts",
+        "scripts/02-seed-plans.sql"
+      ],
+      "kpi": "<5 min plan switch",
+      "status": "Live"
+    },
+    {
+      "name": "Documentation Portal",
+      "description": "Docs endpoints with Markdown metadata feed the UI knowledge base and align with mission scripts.",
+      "touchpoints": [
+        "server/src/modules/docs/docs.controller.ts",
+        "server/src/modules/docs/docs.service.ts",
+        "app/page.tsx"
+      ],
+      "kpi": "Instant doc search",
+      "status": "Live"
+    }
+  ],
   "mission_scripts": [
     {
       "name": "Guardian Sweep",
